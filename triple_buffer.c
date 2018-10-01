@@ -146,10 +146,7 @@ int main(int argc, char **argv)
 	unsigned long timedelay = 1000000;
 	unsigned long buf_len = 128;
 	int ret, c, i, j, toread;
-	int fp1;
-	int fp2;
-	int fp3;
-	int *fp_array[3] = {&fp1, &fp2, &fp3};
+	int fp;
 	int num_channels;
 	char *trigger_name = NULL;
 	const char *device_name = "TI-am335x-adc";
@@ -224,7 +221,7 @@ int main(int argc, char **argv)
 	for(int chan = 0; chan < 3; chan++){
 		asprintf(&en_filename, "in_voltage%d_en", chan);
 		ret = write_sysfs_int(en_filename,dev_dir_name, 1);
-		if(ret < ){
+		if(ret < 0){
 			printf("Failed to set channel %d for scanning", chan);
 			goto error_free_triggername;
 		}
