@@ -159,7 +159,7 @@ int main(int argc, char **argv)
 	char *data;
 	ssize_t read_size;
 	int dev_num, trig_num;
-	const char *buffer_access = "/dev/iio:device0"
+	const char *buffer_access = "/dev/iio:device0";
 	int scan_size;
 	int noevents = 0;
 	char *dummy;
@@ -220,7 +220,7 @@ int main(int argc, char **argv)
 	/*
 	 * Set three channels to scan into buffer
 	 */
-	asprintf(&dev_dir_name, "%s/scan_elements", dev_dir_name)
+	asprintf(&dev_dir_name, "%s/scan_elements", dev_dir_name);
 	for(int chan = 0; chan < 3; chan++){
 		asprintf(&en_filename, "in_voltage%d_en", chan);
 		ret = write_sysfs_int(en_filename,dev_dir_name, 1);
