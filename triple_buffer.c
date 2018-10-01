@@ -151,8 +151,9 @@ int main(int argc, char **argv)
 	int fp3;
 	int *fp_array[3] = {&fp1, &fp2, &fp3};
 	int num_channels;
-	char *trigger_name = NULL, *device_name = NULL;
-	char *dev_dir_name, *buf_dir_name;
+	char *trigger_name = NULL;
+	const char *device_name = "TI-am335x-adc";
+	char *dev_dir_name, *buf_dir_name, *en_filename;
 
 	int datardytrigger = 1;
 	char *data;
@@ -215,7 +216,19 @@ int main(int argc, char **argv)
 		printf("diag %s\n", dev_dir_name);
 		goto error_free_triggername;
 	}
-	printf("MarkerA0");
+
+	/*
+	 * Set three channels to scan into buffer
+	 */
+	asprintf(&dev_dir_name, "%s/scan_elements", dev_dir_name)
+	for(int chan = 0; chan < 3; chan++){
+		asprintf(&en_filename, "in_voltage%d_en", chan);
+		ret = write_sysfs_int(en_filename,dev_dir_name, 1);
+		if(ret < ){
+			printf("Failed to set channel %d for scanning", chan);
+			goto error_free_triggername;
+		}
+	}
 
 	/* 
 	 * Construct the directory name for the associated buffer.
