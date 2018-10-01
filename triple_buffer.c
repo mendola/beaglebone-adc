@@ -270,12 +270,9 @@ int main(int argc, char **argv)
 		goto error_free_buffer_access;
 	}
 
-	int fp;
 	/* Wait for events 10 times */
-	while (1) {
 		usleep(timedelay);
 		/* Read from each ADC and perform processing */
-		for(int adc_idx = 0; adc_idx < 3; adc_idx++){
 			fp = *fp_array[adc_idx];
 			read_size = read(fp,
 					data,
@@ -290,11 +287,6 @@ int main(int argc, char **argv)
 				process_scan(data + scan_size*i,
 								channels,
 								num_channels);
-			}
-
-	}
-
-
 
 	/* Stop the buffer */
 	ret = write_sysfs_int("enable", buf_dir_name, 0);
