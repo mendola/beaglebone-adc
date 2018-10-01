@@ -100,7 +100,6 @@ void process_scan(char *data,
 {
 	int k;
 	for (k = 0; k < num_channels; k++)
-		print("Channel: %d", k);
 		switch (channels[k].bytes) {
 			/* only a few cases implemented so far */
 		case 2:
@@ -147,8 +146,10 @@ int main(int argc, char **argv)
 	unsigned long timedelay = 1000000;
 	unsigned long buf_len = 128;
 	int ret, c, i, j, toread;
-	int fp;
-
+	int fp1;
+	int fp2;
+	int fp3;
+	int *fp_array[3] = {&fp1, &fp2, &fp3};
 	int num_channels;
 	char *trigger_name = NULL, *device_name = NULL;
 	char *dev_dir_name, *buf_dir_name;
@@ -157,7 +158,7 @@ int main(int argc, char **argv)
 	char *data;
 	ssize_t read_size;
 	int dev_num, trig_num;
-	char *buffer_access;
+	const char *buffer_access = "/dev/iio:device0"
 	int scan_size;
 	int noevents = 0;
 	char *dummy;
@@ -193,7 +194,7 @@ int main(int argc, char **argv)
 	if (device_name == NULL)
 		return -1;
 
-	/* Find the device requested */
+	/* Find the device requested  (HARDCODE) */
 	dev_num = find_type_by_name(device_name, "iio:device");
 	if (dev_num < 0) {
 		printf("Failed to find the %s\n", device_name);
@@ -203,9 +204,10 @@ int main(int argc, char **argv)
 	printf("iio device number being used is %d\n", dev_num);
 
 	asprintf(&dev_dir_name, "%siio:device%d", iio_dir, dev_num);
+
 	/*
 	 * Parse the files in scan_elements to identify what channels are
-	 * present
+	 * present (HARDCODE)
 	 */
 	ret = build_channel_array(dev_dir_name, &channels, &num_channels);
 	if (ret) {
@@ -214,27 +216,22 @@ int main(int argc, char **argv)
 		goto error_free_triggername;
 	}
 	printf("MarkerA0");
-	/*
+
+	/* 
 	 * Construct the directory name for the associated buffer.
 	 * As we know that the lis3l02dq has only one buffer this may
-	 * be built rather than found.
+	 * be built rather than found. (HARDCODE)
 	 */
 	ret = asprintf(&buf_dir_name,
-		       "%siio:device%d/buffer", iio_dir, dev_num);
-	printf("MarkerA1");
+		       "%siio:device0/buffer", iio_dir);
 	if (ret < 0) {
 		ret = -ENOMEM;
-		printf("Error A0\n");
 		goto error_free_triggername;
 	}
-	printf("dev_dir_name: \n");
-	printf("%s\n", dev_dir_name);
-	printf("End dev_dir_name\n");
+
 	/* Setup ring buffer parameters */
 	ret = write_sysfs_int("length", buf_dir_name, buf_len);
-	printf("Marker cookie\n");
 	if (ret < 0){
-		printf("Marker1!\n");
 		printf("Buf_len: %d\n", buf_len);
 		goto error_free_buf_dir_name;
 	}
@@ -262,23 +259,33 @@ int main(int argc, char **argv)
 		ret = -errno;
 		goto error_free_buffer_access;
 	}
+
+	int fp;
 	/* Wait for events 10 times */
-	for (j = 0; j < num_loops; j++) {
+	while (1) {
 		usleep(timedelay);
-		read_size = read(fp,
-				 data,
-				 buf_len*scan_size);
-		if (read_size == -1)
-			perror("READ:");
-		if (read_size == -EAGAIN) {
-			printf("nothing available\n");
-			continue;
-		}
-		for (i = 0; i < read_size/scan_size; i++)
-			 process_scan(data + scan_size*i,
-				      channels,
-				      num_channels);
+		/* Read from each ADC and perform processing */
+		for(int adc_idx = 0; adc_idx < 3; adc_idx++){
+			fp = *fp_array[adc_idx];
+			read_size = read(fp,
+					data,
+					buf_len*scan_size);
+			if (read_size == -1)
+				perror("READ:");
+			if (read_size == -EAGAIN) {
+				printf("nothing available\n");
+				continue;
+			}
+			for (i = 0; i < read_size/scan_size; i++)
+				process_scan(data + scan_size*i,
+								channels,
+								num_channels);
+			}
+
 	}
+
+
+
 	/* Stop the buffer */
 	ret = write_sysfs_int("enable", buf_dir_name, 0);
 	if (ret < 0)
