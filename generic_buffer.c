@@ -99,7 +99,7 @@ void process_scan(char *data,
 		  int num_channels)
 {
 	int k;
-	for (k = 0; k < num_channels; k++)
+	for (k = 0; k < num_channels; k++){
 		//printf("Channel: %d", k);
 		switch (channels[k].bytes) {
 			/* only a few cases implemented so far */
@@ -138,6 +138,7 @@ void process_scan(char *data,
 		default:
 			break;
 		}
+	}
 	printf("\n");
 }
 
