@@ -100,7 +100,7 @@ void process_scan(char *data,
 {
 	int k;
 	for (k = 0; k < num_channels; k++)
-		print("Channel: %d", k);
+		//printf("Channel: %d", k);
 		switch (channels[k].bytes) {
 			/* only a few cases implemented so far */
 		case 2:
