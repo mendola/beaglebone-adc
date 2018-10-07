@@ -135,6 +135,7 @@ void process_scan(char *data,
 			}
 			break;
 		default:
+			printf("Problem with bytes on channel %d", k);
 			break;
 		}
 	printf("\n");
@@ -206,7 +207,7 @@ int main(int argc, char **argv)
 	 * Set three channels to scan into buffer
 	 */
 	asprintf(&scan_dir, "%s/scan_elements", dev_dir_name);
-	for(int chan = 0; chan < 3; chan++){
+	for(int chan = 0; chan < 4; chan++){
 		asprintf(&en_filename, "in_voltage%d_en", chan);
 		ret = write_sysfs_int(en_filename,scan_dir, 1);
 		if(ret < 0){
@@ -282,6 +283,8 @@ int main(int argc, char **argv)
 				printf("nothing available\n");
 				continue;
 			}
+			printf("read_size=%d\n",read_size);
+			printf("scan_size=%d\n",scan_size);
 			for (i = 0; i < read_size/scan_size; i++)
 				process_scan(data + scan_size*i,
 								channels,
