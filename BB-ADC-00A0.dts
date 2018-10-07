@@ -34,9 +34,9 @@
 			status = "okay";
 			adc {
 				ti,adc-channels = <0 1 2>;
-				ti,chan-step-avg = <0x16 0x16 0x16>;
+				ti,chan-step-avg = <0x8 0x8 0x8>;
 				ti,chan-step-opendelay = <0x98 0x98 0x98>;
-				ti,chan-step-sampledelay = <0xA 0xA 0xA>;
+				ti,chan-step-sampledelay = <0x8 0x8 0x8>;
 			};
 		};
 	};
