@@ -150,7 +150,7 @@ int main(int argc, char **argv)
 	int num_channels;
 	char *trigger_name = NULL;
 	const char *device_name = "TI-am335x-adc";
-	char *dev_dir_name, *buf_dir_name, *en_filename;
+	char *dev_dir_name, *buf_dir_name, *scan_dir, *en_filename;
 
 	int datardytrigger = 1;
 	char *data;
@@ -160,7 +160,6 @@ int main(int argc, char **argv)
 	int scan_size;
 	int noevents = 0;
 	char *dummy;
-
 	struct iio_channel_info *channels;
 
 	while ((c = getopt(argc, argv, "l:w:c:et:n:")) != -1) {
@@ -204,6 +203,19 @@ int main(int argc, char **argv)
 	asprintf(&dev_dir_name, "%siio:device%d", iio_dir, dev_num);
 
 	/*
+	 * Set three channels to scan into buffer
+	 */
+	asprintf(&scan_dir, "%s/scan_elements", dev_dir_name);
+	for(int chan = 0; chan < 3; chan++){
+		asprintf(&en_filename, "in_voltage%d_en", chan);
+		ret = write_sysfs_int(en_filename,scan_dir, 1);
+		if(ret < 0){
+			printf("Failed to set channel %d for scanning", chan);
+			goto error_free_triggername;
+		}
+	}
+
+	/*
 	 * Parse the files in scan_elements to identify what channels are
 	 * present (HARDCODE)
 	 */
@@ -212,19 +224,6 @@ int main(int argc, char **argv)
 		printf("Problem reading scan element information\n");
 		printf("diag %s\n", dev_dir_name);
 		goto error_free_triggername;
-	}
-
-	/*
-	 * Set three channels to scan into buffer
-	 */
-	asprintf(&dev_dir_name, "%s/scan_elements", dev_dir_name);
-	for(int chan = 0; chan < 3; chan++){
-		asprintf(&en_filename, "in_voltage%d_en", chan);
-		ret = write_sysfs_int(en_filename,dev_dir_name, 1);
-		if(ret < 0){
-			printf("Failed to set channel %d for scanning", chan);
-			goto error_free_triggername;
-		}
 	}
 
 	/* 
@@ -273,7 +272,7 @@ int main(int argc, char **argv)
 	/* Wait for events 10 times */
 		usleep(timedelay);
 		/* Read from each ADC and perform processing */
-			fp = *fp_array[adc_idx];
+		for(int j = 0; j<num_loops; j++){
 			read_size = read(fp,
 					data,
 					buf_len*scan_size);
@@ -287,7 +286,7 @@ int main(int argc, char **argv)
 				process_scan(data + scan_size*i,
 								channels,
 								num_channels);
-
+		}
 	/* Stop the buffer */
 	ret = write_sysfs_int("enable", buf_dir_name, 0);
 	if (ret < 0)
